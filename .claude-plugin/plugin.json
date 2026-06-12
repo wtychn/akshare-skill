@@ -1,0 +1,8 @@
+{
+  "name": "akshare",
+  "description": "Financial market data query tool for A-shares, HK stocks, US stocks, indices, futures, and commodities via AKShare",
+  "version": "1.1.0",
+  "author": {
+    "name": "user"
+  }
+}

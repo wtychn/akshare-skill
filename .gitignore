@@ -1,0 +1,5 @@
+.venv/
+.omc/
+__pycache__/
+*.pyc
+.claude/

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "akshare",
+  "description": "Financial market data query tool for A-shares, HK stocks, US stocks, and commodities via AKShare",
+  "owner": {
+    "name": "user"
+  },
+  "metadata": {
+    "description": "AKShare market data plugin for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "akshare",
+      "description": "Financial market data query tool for A-shares, HK stocks, US stocks, and commodities via AKShare",
+      "category": "data",
+      "source": "./"
+    }
+  ]
+}
