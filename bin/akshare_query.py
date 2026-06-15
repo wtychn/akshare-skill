@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """AKShare market data query CLI for Claude Code.
 
-Fetches closing/price data for A-shares, HK stocks, US stocks, and spot commodities.
-Outputs JSON for easy consumption by LLMs.
+Fetches closing/price data for A-shares, HK stocks, US stocks, indices, futures,
+and spot commodities. Outputs JSON for easy consumption by LLMs.
 
 Usage:
     akshare_query.py <market> <symbol> [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--fields f1,f2,...]
 
-Markets: cn, hk, us, commodity
+Markets: cn, hk, us, index, futures, commodity
 """
 
 import argparse
@@ -34,7 +34,7 @@ def ensure_venv():
     subprocess.run([sys.executable, "-m", "venv", str(VENV_DIR)], check=True)
     pip = str(VENV_DIR / "bin" / "pip")
     subprocess.run(
-        [pip, "install", "-q", "akshare", "pandas"],
+        [pip, "install", "-q", "akshare>=1.14,<2.0", "pandas>=2.0,<3.0"],
         check=True,
         capture_output=True,
     )
@@ -125,7 +125,7 @@ def fetch_index(symbol, start_date, end_date):
         "399001": "sz399001", "深证成指": "sz399001", "SZ": "sz399001",
         "399006": "sz399006", "创业板指": "sz399006", "创业板": "sz399006", "CYB": "sz399006",
         "000300": "sh000300", "沪深300": "sh000300", "HS300": "sh000300",
-        "000016": "sh000016", "上证50": "sh000016", "SZ50": "sh000016",
+        "000016": "sh000016", "上证50": "sh000016", "SZ50": "sh000016", "SH50": "sh000016",
         "000905": "sh000905", "中证500": "sh000905", "ZZ500": "sh000905",
         "000852": "sh000852", "中证1000": "sh000852", "ZZ1000": "sh000852",
         "399673": "sz399673", "创业板50": "sz399673",
@@ -155,24 +155,29 @@ def fetch_index(symbol, start_date, end_date):
         # Prefer sina source (stable, standard columns); fallback to em
         try:
             df = ak.stock_hk_index_daily_sina(symbol=code)
-        except Exception:
+        except (Exception,) as e:
+            print(json.dumps({"warning": f"Sina HK index unavailable, using EM fallback: {type(e).__name__}"}), file=sys.stderr)
             df = ak.stock_hk_index_daily_em(symbol=code)
+            # EM source may return "latest" or "收盘" for close price
+            if "latest" in df.columns:
+                df = df.rename(columns={"latest": "close"})
+            elif "收盘" in df.columns:
+                df = df.rename(columns={"收盘": "close"})
             df = df.rename(columns={
                 "日期": "date", "开盘": "open", "最高": "high",
-                "最低": "low", "收盘": "close", "latest": "close",
-                "成交量": "volume",
+                "最低": "low", "成交量": "volume",
             })
         df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
     elif symbol_upper in US_INDEX_MAP or symbol in US_INDEX_MAP:
         code = US_INDEX_MAP.get(symbol_upper) or US_INDEX_MAP.get(symbol)
-        # Use sina US index interface
         df = ak.index_us_stock_sina(symbol=f".{code}")
-        df = df.rename(columns={"date": "date", "close": "close", "open": "open", "high": "high", "low": "low", "volume": "volume"})
         df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
     else:
         # Try as raw Chinese index code (6 digits → add prefix)
         if len(symbol) == 6 and symbol.isdigit():
-            if symbol.startswith("0") or symbol.startswith("9"):
+            if symbol.startswith("39"):
+                code = f"sz{symbol}"
+            elif symbol.startswith("0") or symbol.startswith("9"):
                 code = f"sh{symbol}"
             else:
                 code = f"sz{symbol}"
