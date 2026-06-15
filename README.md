@@ -5,21 +5,11 @@ Financial market data query tool for A-shares, HK stocks, US stocks, indices, fu
 ## Install
 
 ```bash
-# Clone or copy to plugins directory
-cp -r akshare-skill ~/.claude/plugins/akshare
+# Register as a marketplace source
+/plugin marketplace add wtychn/akshare-skill
 
-# Or symlink
-ln -s /path/to/akshare-skill ~/.claude/plugins/akshare
-```
-
-Enable in `.claude/settings.json`:
-
-```json
-{
-  "enabledPlugins": {
-    "akshare": true
-  }
-}
+# Install the plugin
+/plugin install akshare-skill@akshare
 ```
 
 ## Usage
