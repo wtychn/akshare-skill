@@ -141,7 +141,7 @@ def fetch_index(symbol, start_date, end_date):
 
     # US index aliases
     US_INDEX_MAP = {
-        "SPX": "SPX", "SP500": "SPX", "标普500": "SPX", "标普": "SPX", ".INX": "SPX",
+        "SPX": "INX", "SP500": "INX", "标普500": "INX", "标普": "INX", ".INX": "INX", "INX": "INX",
         "IXIC": "IXIC", "NASDAQ": "IXIC", "纳斯达克": "IXIC", "纳指": "IXIC",
         "DJI": "DJI", "DJIA": "DJI", "道琼斯": "DJI", "道指": "DJI",
     }
@@ -152,11 +152,16 @@ def fetch_index(symbol, start_date, end_date):
         df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
     elif symbol_upper in HK_INDEX_MAP or symbol in HK_INDEX_MAP:
         code = HK_INDEX_MAP.get(symbol_upper) or HK_INDEX_MAP.get(symbol)
-        df = ak.stock_hk_index_daily_em(symbol=code)
-        df = df.rename(columns={
-            "日期": "date", "开盘": "open", "最高": "high",
-            "最低": "low", "收盘": "close", "成交量": "volume",
-        })
+        # Prefer sina source (stable, standard columns); fallback to em
+        try:
+            df = ak.stock_hk_index_daily_sina(symbol=code)
+        except Exception:
+            df = ak.stock_hk_index_daily_em(symbol=code)
+            df = df.rename(columns={
+                "日期": "date", "开盘": "open", "最高": "high",
+                "最低": "low", "收盘": "close", "latest": "close",
+                "成交量": "volume",
+            })
         df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
     elif symbol_upper in US_INDEX_MAP or symbol in US_INDEX_MAP:
         code = US_INDEX_MAP.get(symbol_upper) or US_INDEX_MAP.get(symbol)

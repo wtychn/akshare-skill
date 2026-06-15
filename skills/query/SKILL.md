@@ -180,7 +180,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/akshare_query.py us AAPL --start 2024-01-01 --fields c
 
 ## Error Handling
 
-The script retries up to 3 times on network errors. If a symbol is not found, it returns:
+The script retries up to 3 times on network errors. HK indices use Sina as primary source with 东方财富 as fallback for resilience. If a symbol is not found, it returns:
 ```json
 {"error": "Symbol not found", "market": "index", "symbol": "UNKNOWN"}
 ```

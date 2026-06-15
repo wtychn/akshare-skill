@@ -1,5 +1,25 @@
+# Python
 .venv/
-.omc/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Claude Code local config (not part of plugin distribution)
 .claude/
+
+# OMC state (session-local)
+.omc/
