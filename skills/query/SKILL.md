@@ -16,7 +16,7 @@ description: |
 ## Usage
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/bin/akshare_query.py <market> <symbol> [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--fields close,volume,open,high,low]
+${CLAUDE_PLUGIN_ROOT}/bin/akshare_query.py <market> <symbol> [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--fields close,volume,open,high,low] [--mirror URL]
 ```
 
 ## Markets & Symbol Conventions
@@ -138,6 +138,7 @@ With `--fields close,volume`:
 - `--start`: 30 days ago
 - `--end`: today
 - `--fields`: `close` only
+- `--mirror`: none (uses default PyPI; set to a mirror URL like `https://pypi.tuna.tsinghua.edu.cn/simple` for first-run install in China)
 
 ## When to Use
 
@@ -187,4 +188,8 @@ The script retries up to 3 times on network errors. HK indices use Sina as prima
 
 ## First Run
 
-On first invocation, the script auto-creates a Python venv and installs `akshare` + `pandas`. This takes ~30 seconds. Subsequent calls are instant.
+On first invocation, the script auto-creates a Python venv and installs `akshare` + `pandas`. This takes ~30 seconds. Subsequent calls are instant. Use `--mirror` to specify a PyPI mirror for faster installs in China:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/bin/akshare_query.py cn 600519 --mirror https://pypi.tuna.tsinghua.edu.cn/simple
+```

@@ -28,6 +28,9 @@ python3 bin/akshare_query.py index 上证指数 --start 2025-01-01 --end 2025-01
 python3 bin/akshare_query.py futures RB --start 2025-06-01 --fields close,volume
 python3 bin/akshare_query.py commodity CU --start 2025-06-01 --fields close,dom_basis
 
+# First run with PyPI mirror (useful in China)
+python3 bin/akshare_query.py cn 600519 --mirror https://pypi.tuna.tsinghua.edu.cn/simple
+
 # Check help
 python3 bin/akshare_query.py --help
 ```
@@ -37,6 +40,7 @@ No test suite — validation is done by running the CLI against live AKShare API
 ## Key Design Decisions
 
 - **Self-contained venv**: The script creates `.venv/` adjacent to the repo root on first run and re-execs itself inside it. No system-level pip install needed.
+- **`--mirror` option**: Allows specifying a PyPI mirror URL (e.g. `https://pypi.tuna.tsinghua.edu.cn/simple`) for dependency installation. Parsed early from `sys.argv` before argparse runs, since `ensure_venv()` executes before `main()`.
 - **`${CLAUDE_PLUGIN_ROOT}`**: All paths in SKILL.md use this variable for portability across installations.
 - **Retry logic**: 3 retries with exponential backoff for network failures.
 - **Output format**: Always JSON (array of `{date, close, ...}` objects) for LLM consumption.

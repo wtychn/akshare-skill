@@ -24,8 +24,12 @@ MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
 
 
-def ensure_venv():
-    """Create venv and install dependencies if not present."""
+def ensure_venv(mirror=None):
+    """Create venv and install dependencies if not present.
+
+    Args:
+        mirror: Optional PyPI mirror URL (e.g. https://pypi.tuna.tsinghua.edu.cn/simple).
+    """
     if (VENV_DIR / "bin" / "python3").exists():
         return
 
@@ -33,8 +37,11 @@ def ensure_venv():
 
     subprocess.run([sys.executable, "-m", "venv", str(VENV_DIR)], check=True)
     pip = str(VENV_DIR / "bin" / "pip")
+    install_cmd = [pip, "install", "-q", "akshare>=1.14,<2.0", "pandas>=2.0,<3.0"]
+    if mirror:
+        install_cmd += ["-i", mirror]
     subprocess.run(
-        [pip, "install", "-q", "akshare>=1.14,<2.0", "pandas>=2.0,<3.0"],
+        install_cmd,
         check=True,
         capture_output=True,
     )
@@ -408,6 +415,7 @@ def main():
     parser.add_argument("--start", default=(datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"))
     parser.add_argument("--end", default=datetime.now().strftime("%Y-%m-%d"))
     parser.add_argument("--fields", default="close", help="Comma-separated: close,open,high,low,volume")
+    parser.add_argument("--mirror", default=None, help="PyPI mirror URL for pip install (e.g. https://pypi.tuna.tsinghua.edu.cn/simple)")
 
     args = parser.parse_args()
     fields = [f.strip() for f in args.fields.split(",")]
@@ -439,7 +447,17 @@ def main():
     print(json.dumps(result, ensure_ascii=False, default=str))
 
 
+def _parse_mirror_arg():
+    """Extract --mirror from sys.argv early (before full argparse in main)."""
+    for i, arg in enumerate(sys.argv):
+        if arg == "--mirror" and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+        if arg.startswith("--mirror="):
+            return arg.split("=", 1)[1]
+    return None
+
+
 if __name__ == "__main__":
-    ensure_venv()
+    ensure_venv(mirror=_parse_mirror_arg())
     relaunch_in_venv()
     main()

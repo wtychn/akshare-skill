@@ -18,7 +18,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/akshare_query.py $ARGUMENTS
 ## Argument Format
 
 ```
-<market> <symbol> [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--fields close,volume,open,high,low]
+<market> <symbol> [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--fields close,volume,open,high,low] [--mirror URL]
 ```
 
 Markets: `cn`, `hk`, `us`, `index`, `futures`, `commodity`
@@ -34,3 +34,4 @@ Markets: `cn`, `hk`, `us`, `index`, `futures`, `commodity`
 - `/akshare futures 铁矿石 --start 2024-06-01` — Iron ore futures
 - `/akshare commodity AU --start 2024-06-01` — Gold spot price
 - `/akshare hk 00700` — Tencent recent prices
+- `/akshare cn 600519 --mirror https://pypi.tuna.tsinghua.edu.cn/simple` — Use mirror for first-run install

@@ -63,6 +63,16 @@ JSON array for LLM consumption:
 | Commodities | 生意社 (`futures_spot_price_daily`) | — |
 | Crude Oil | Sina (`futures_foreign_hist`) | — |
 
+## PyPI Mirror
+
+If you're behind a firewall or want faster installs in China, pass `--mirror` on the first run:
+
+```bash
+/akshare cn 600519 --mirror https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+The mirror URL is only used during initial dependency installation (`.venv` creation). Once the venv exists, `--mirror` is ignored.
+
 ## Dependencies
 
 Auto-installed on first run (into a local `.venv`):
