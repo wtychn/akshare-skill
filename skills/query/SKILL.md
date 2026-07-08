@@ -140,12 +140,21 @@ With `--fields close,volume`:
 - `--fields`: `close` only
 - `--mirror`: none (uses default PyPI; set to a mirror URL like `https://pypi.tuna.tsinghua.edu.cn/simple` for first-run install in China)
 
+## Realtime Fallback (Index)
+
+When querying indices with `--end` set to today and daily data has not yet been published (typically before 18:00), the script automatically falls back to **realtime spot APIs** (`stock_zh_index_spot_sina` / `stock_hk_index_spot_sina`) to fill in today's data. This means:
+
+- Querying today's index close **always works** (no more "No data returned" during evenings)
+- Cross-day ranges (e.g. `--start 2024-07-07 --end 2024-07-08`) will include today's realtime price alongside historical daily data
+- No extra flags needed — the fallback is transparent
+
 ## When to Use
 
 - User asks for stock/commodity/index/futures prices
 - Cross-validation of market data across sources
 - Comparing price movements between assets
 - Checking historical closing prices
+- Checking **today's** index close (realtime fallback handles this)
 - Tracking index performance (上证、恒生、标普等)
 - Monitoring futures prices (螺纹钢、铁矿石、豆粕等)
 

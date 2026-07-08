@@ -398,6 +398,96 @@ def fetch_commodity(symbol, start_date, end_date):
     return df
 
 
+def fetch_index_spot(symbol):
+    """Fetch realtime index quote when daily data is not yet available (same day).
+
+    Falls back to spot APIs from Sina which update in near-realtime.
+    Returns a single-row DataFrame with today's date and latest price.
+    """
+    import akshare as ak
+    import pandas as pd
+
+    symbol_upper = symbol.upper()
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    # CN index aliases (same mapping as fetch_index)
+    CN_INDEX_MAP = {
+        "000001": "sh000001", "上证指数": "sh000001", "上证综指": "sh000001", "SH": "sh000001",
+        "399001": "sz399001", "深证成指": "sz399001", "SZ": "sz399001",
+        "399006": "sz399006", "创业板指": "sz399006", "创业板": "sz399006", "CYB": "sz399006",
+        "000300": "sh000300", "沪深300": "sh000300", "HS300": "sh000300",
+        "000016": "sh000016", "上证50": "sh000016", "SZ50": "sh000016", "SH50": "sh000016",
+        "000905": "sh000905", "中证500": "sh000905", "ZZ500": "sh000905",
+        "000852": "sh000852", "中证1000": "sh000852", "ZZ1000": "sh000852",
+        "399673": "sz399673", "创业板50": "sz399673",
+        "000688": "sh000688", "科创50": "sh000688", "KC50": "sh000688",
+    }
+
+    HK_INDEX_MAP = {
+        "HSI": "HSI", "恒生指数": "HSI", "恒指": "HSI",
+        "HSTECH": "HSTECH", "恒生科技": "HSTECH", "恒生科技指数": "HSTECH",
+        "HSCEI": "HSCEI", "国企指数": "HSCEI", "H股指数": "HSCEI",
+    }
+
+    # Try A-share index spot
+    if symbol_upper in CN_INDEX_MAP or symbol in CN_INDEX_MAP:
+        code = CN_INDEX_MAP.get(symbol_upper) or CN_INDEX_MAP.get(symbol)
+        df_spot = ak.stock_zh_index_spot_sina()
+        row = df_spot[df_spot["代码"] == code]
+        if row.empty:
+            return None
+        row = row.iloc[0]
+        return pd.DataFrame([{
+            "date": today,
+            "open": float(row["今开"]),
+            "high": float(row["最高"]),
+            "low": float(row["最低"]),
+            "close": float(row["最新价"]),
+            "volume": int(row["成交量"]),
+        }])
+
+    # Try HK index spot
+    if symbol_upper in HK_INDEX_MAP or symbol in HK_INDEX_MAP:
+        code = HK_INDEX_MAP.get(symbol_upper) or HK_INDEX_MAP.get(symbol)
+        df_spot = ak.stock_hk_index_spot_sina()
+        row = df_spot[df_spot["代码"] == code]
+        if row.empty:
+            return None
+        row = row.iloc[0]
+        return pd.DataFrame([{
+            "date": today,
+            "open": float(row["今开"]),
+            "high": float(row["最高"]),
+            "low": float(row["最低"]),
+            "close": float(row["最新价"]),
+            "volume": 0,
+        }])
+
+    # Raw 6-digit CN index code
+    if len(symbol) == 6 and symbol.isdigit():
+        if symbol.startswith("39"):
+            code = f"sz{symbol}"
+        elif symbol.startswith("0") or symbol.startswith("9"):
+            code = f"sh{symbol}"
+        else:
+            code = f"sz{symbol}"
+        df_spot = ak.stock_zh_index_spot_sina()
+        row = df_spot[df_spot["代码"] == code]
+        if row.empty:
+            return None
+        row = row.iloc[0]
+        return pd.DataFrame([{
+            "date": today,
+            "open": float(row["今开"]),
+            "high": float(row["最高"]),
+            "low": float(row["最低"]),
+            "close": float(row["最新价"]),
+            "volume": int(row["成交量"]),
+        }])
+
+    return None
+
+
 MARKET_FETCHERS = {
     "cn": fetch_cn,
     "hk": fetch_hk,
@@ -431,6 +521,23 @@ def main():
         else:
             print(json.dumps({"error": error_msg, "market": args.market, "symbol": args.symbol}))
         sys.exit(1)
+
+    # Fallback: if index data is missing today's row and end date includes today, try realtime spot
+    if args.market == "index":
+        today = datetime.now().strftime("%Y-%m-%d")
+        if args.end >= today:
+            has_today = df is not None and not df.empty and (df["date"] == today).any()
+            if not has_today:
+                try:
+                    import pandas as pd
+                    spot_df = fetch_index_spot(args.symbol)
+                    if spot_df is not None and not spot_df.empty:
+                        if df is not None and not df.empty:
+                            df = pd.concat([df, spot_df], ignore_index=True)
+                        else:
+                            df = spot_df
+                except Exception:
+                    pass  # fall through to "No data" below
 
     if df is None or df.empty:
         print(json.dumps({"error": "No data returned", "market": args.market, "symbol": args.symbol}))

@@ -56,12 +56,14 @@ JSON array for LLM consumption:
 | A-shares (`cn`) | Sina (`stock_zh_a_daily`) | — |
 | HK stocks (`hk`) | Sina (`stock_hk_daily`) | — |
 | US stocks (`us`) | Sina (`stock_us_daily`) | — |
-| CN indices | Sina (`stock_zh_index_daily`) | — |
-| HK indices | Sina (`stock_hk_index_daily_sina`) | 东方财富 (`stock_hk_index_daily_em`) |
+| CN indices | Sina (`stock_zh_index_daily`) | Realtime: `stock_zh_index_spot_sina` |
+| HK indices | Sina (`stock_hk_index_daily_sina`) | 东方财富 (`stock_hk_index_daily_em`) / Realtime: `stock_hk_index_spot_sina` |
 | US indices | Sina (`index_us_stock_sina`) | — |
 | Futures | Sina (`futures_zh_daily_sina`) | — |
 | Commodities | 生意社 (`futures_spot_price_daily`) | — |
 | Crude Oil | Sina (`futures_foreign_hist`) | — |
+
+> **Note:** When querying indices for today and daily data hasn't been published yet (typically before 18:00), the tool automatically falls back to realtime spot APIs for same-day prices.
 
 ## PyPI Mirror
 
